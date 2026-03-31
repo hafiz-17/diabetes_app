@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% set active = "analytics" %}
+{% block title %}Analytics — DiabetesAI{% endblock %}
+{% block head_extra %}
+<style>
+.ph{padding:3rem 0 2.5rem;border-bottom:1px solid var(--bdr)}
+.ph h1{font-size:clamp(1.6rem,3vw,2.4rem);letter-spacing:-.02em;margin-bottom:.5rem}
+.ph p{color:var(--text-2);font-size:.95rem}
+
+.mstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin:2rem 0}
+@media(max-width:900px){.mstrip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.mstrip{grid-template-columns:repeat(2,1fr)}}
+.mcell{background:var(--sur);padding:1.5rem;text-align:center;transition:background .2s}
+.mcell:hover{background:var(--ink-2)}
+.mico{font-size:1.4rem;margin-bottom:.5rem}
+.mval{font-family:var(--fh);font-size:1.7rem;font-weight:900;background:linear-gradient(135deg,var(--azure-l),var(--ice));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mlbl{font-size:.68rem;color:var(--text-3);margin-top:.2rem;text-transform:uppercase;letter-spacing:.07em;font-family:var(--fb)}
+
+.cgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;padding-bottom:5rem}
+@media(max-width:860px){.cgrid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+.cc{padding:1.75rem}
+.cch{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.cct{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem;font-family:var(--fh)}
+.cct i{color:var(--azure-l);font-size:.9rem}
+.ccd{font-size:.78rem;color:var(--text-3);font-family:var(--fb)}
+.cimg{width:100%;border-radius:10px;display:block;transition:transform .35s}
+.cc:hover .cimg{transform:scale(1.01)}
+
+.leg{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem}
+.li{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--text-2);font-family:var(--fb)}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+.crep{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:640px){.crep{grid-template-columns:1fr}}
+.crep-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);font-family:var(--fb);margin-bottom:.85rem}
+.crcards{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+@media(max-width:500px){.crcards{grid-template-columns:repeat(2,1fr)}}
+.crcard{background:var(--ink-2);border:1px solid var(--bdr);border-radius:var(--rs);padding:1rem;text-align:center}
+.crl{font-size:.66rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-family:var(--fb)}
+.crv{font-family:var(--fh);font-size:1.55rem;font-weight:900;margin-top:.25rem}
+
+.cfggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.25rem}
+@media(max-width:640px){.cfggrid{grid-template-columns:repeat(2,1fr)}}
+.cfgi{background:var(--ink-2);border:1px solid var(--bdr);border-radius:var(--rs);padding:1rem}
+.cfgk{font-size:.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--fb)}
+.cfgv{font-family:var(--fh);font-size:1.1rem;font-weight:700;color:var(--azure-l);margin-top:.25rem}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ph"><div class="c">
+  <div class="badge badge-blue mb2 rv"><i class="fas fa-chart-line"></i> Model Analytics</div>
+  <h1 class="rv d1r">Performance <span class="shine">Dashboard</span></h1>
+  <p class="rv d2r">Gradient Boosting Classifier trained on 100,000 patient records — complete evaluation suite.</p>
+</div></div>
+
+<div class="c sec-sm">
+  <div class="mstrip rv">
+    <div class="mcell"><div class="mico">🎯</div><div class="mval">97.17%</div><div class="mlbl">Test Accuracy</div></div>
+    <div class="mcell"><div class="mico">📈</div><div class="mval">0.9790</div><div class="mlbl">ROC-AUC</div></div>
+    <div class="mcell"><div class="mico">🔬</div><div class="mval">0.8838</div><div class="mlbl">PR-AUC</div></div>
+    <div class="mcell"><div class="mico">✅</div><div class="mval">97.18%</div><div class="mlbl">5-Fold CV</div></div>
+    <div class="mcell"><div class="mico">🧠</div><div class="mval">200</div><div class="mlbl">Estimators</div></div>
+    <div class="mcell"><div class="mico">📊</div><div class="mval">100K</div><div class="mlbl">Train Samples</div></div>
+  </div>
+
+  <div class="card cc full rv delay-1" style="margin-bottom:1.5rem">
+    <div class="cch"><div class="cct"><i class="fas fa-table"></i> Classification Report</div><div class="ccd">Per-class metrics on 20,000 held-out test samples</div></div>
+    <div class="crep">
+      <div><div class="crep-lbl">✅ No Diabetes (91.5%)</div>
+        <div class="crcards">
+          <div class="crcard"><div class="crl">Precision</div><div class="crv" style="color:var(--mint)">0.97</div></div>
+          <div class="crcard"><div class="crl">Recall</div><div class="crv" style="color:var(--mint)">1.00</div></div>
+          <div class="crcard"><div class="crl">F1</div><div class="crv" style="color:var(--mint)">0.98</div></div>
+          <div class="crcard"><div class="crl">Support</div><div class="crv">18.3K</div></div>
+        </div>
+      </div>
+      <div><div class="crep-lbl">🩺 Diabetes (8.5%)</div>
+        <div class="crcards">
+          <div class="crcard"><div class="crl">Precision</div><div class="crv" style="color:var(--coral)">0.96</div></div>
+          <div class="crcard"><div class="crl">Recall</div><div class="crv" style="color:var(--gold)">0.69</div></div>
+          <div class="crcard"><div class="crl">F1</div><div class="crv" style="color:var(--coral)">0.81</div></div>
+          <div class="crcard"><div class="crl">Support</div><div class="crv">1.7K</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cgrid">
+    <div class="card cc full rv d1r">
+      <div class="cch"><div class="cct"><i class="fas fa-chart-line"></i> Learning Curves</div><div class="ccd">Accuracy & loss over 200 boosting rounds</div></div>
+      <img src="{{ url_for('static', filename='images/learning_curves.png') }}" class="cimg" loading="lazy"/>
+      <div class="leg">
+        <div class="li"><div class="ld" style="background:#667eea"></div> Train Accuracy</div>
+        <div class="li"><div class="ld" style="background:#f093fb"></div> Test Accuracy</div>
+        <div class="li"><div class="ld" style="background:#fda085"></div> Train Loss</div>
+        <div class="li"><div class="ld" style="background:#f5576c"></div> Test Loss</div>
+      </div>
+    </div>
+    <div class="card cc rv d2r"><div class="cch"><div class="cct"><i class="fas fa-th"></i> Confusion Matrix</div><div class="ccd">True vs predicted labels</div></div><img src="{{ url_for('static',filename='images/confusion_matrix.png') }}" class="cimg" loading="lazy"/></div>
+    <div class="card cc rv d2r"><div class="cch"><div class="cct"><i class="fas fa-wave-square"></i> ROC Curve</div><div class="ccd">AUC = 0.9790</div></div><img src="{{ url_for('static',filename='images/roc_curve.png') }}" class="cimg" loading="lazy"/></div>
+    <div class="card cc rv d3r"><div class="cch"><div class="cct"><i class="fas fa-chart-area"></i> Precision-Recall</div><div class="ccd">AUC = 0.8838</div></div><img src="{{ url_for('static',filename='images/pr_curve.png') }}" class="cimg" loading="lazy"/></div>
+    <div class="card cc rv d3r"><div class="cch"><div class="cct"><i class="fas fa-layer-group"></i> 5-Fold CV</div><div class="ccd">Mean 97.18% ± 0.06%</div></div><img src="{{ url_for('static',filename='images/cv_scores.png') }}" class="cimg" loading="lazy"/></div>
+    <div class="card cc full rv d4r">
+      <div class="cch"><div class="cct"><i class="fas fa-sort-amount-down"></i> Feature Importance</div><div class="ccd">Which clinical factors drive predictions most</div></div>
+      <img src="{{ url_for('static',filename='images/feature_importance.png') }}" class="cimg" loading="lazy"/>
+      <div class="leg">
+        <div class="li"><div class="ld" style="background:var(--coral)"></div> High Impact (&gt;15%)</div>
+        <div class="li"><div class="ld" style="background:var(--gold)"></div> Medium (7–15%)</div>
+        <div class="li"><div class="ld" style="background:var(--azure-l)"></div> Low (&lt;7%)</div>
+      </div>
+    </div>
+    <div class="card cc full rv d5r"><div class="cch"><div class="cct"><i class="fas fa-balance-scale"></i> Class Distribution</div><div class="ccd">8,500 diabetic vs 91,500 non-diabetic</div></div><img src="{{ url_for('static',filename='images/class_distribution.png') }}" class="cimg" loading="lazy"/></div>
+    <div class="card cc full rv d5r">
+      <div class="cch"><div class="cct"><i class="fas fa-gear"></i> Model Configuration</div></div>
+      <div class="cfggrid">
+        <div class="cfgi"><div class="cfgk">Algorithm</div><div class="cfgv">Gradient Boosting</div></div>
+        <div class="cfgi"><div class="cfgk">Estimators</div><div class="cfgv">200</div></div>
+        <div class="cfgi"><div class="cfgk">Learning Rate</div><div class="cfgv">0.08</div></div>
+        <div class="cfgi"><div class="cfgk">Max Depth</div><div class="cfgv">5</div></div>
+        <div class="cfgi"><div class="cfgk">Subsample</div><div class="cfgv">0.8</div></div>
+        <div class="cfgi"><div class="cfgk">Random State</div><div class="cfgv">42</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

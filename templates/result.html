@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% set active = "result" %}
+{% block title %}Result — DiabetesAI{% endblock %}
+{% block head_extra %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── PAGE HEADER ── */
+.rh{padding:2.5rem 0;border-bottom:1px solid var(--bdr)}
+.rh-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.rh h1{font-size:clamp(1.4rem,2.5vw,2rem);letter-spacing:-.02em}
+.rh p{color:var(--text-2);font-size:.88rem;margin-top:.3rem}
+.rh-right{display:flex;gap:.75rem;flex-wrap:wrap}
+
+/* ── LAYOUT ── */
+.result-body{padding:2.5rem 0 5rem}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:900px){.rg{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+
+/* ── GAUGE CARD ── */
+.gauge-card{padding:2.25rem;display:flex;flex-direction:column;align-items:center;gap:1.35rem}
+.gw{position:relative;width:210px;height:210px}
+.gsvg{transform:rotate(-90deg);display:block}
+.gtrack{fill:none;stroke:rgba(255,255,255,.05);stroke-width:18}
+.gfill{fill:none;stroke-width:18;stroke-linecap:round;transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)}
+.gcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gpct{font-family:var(--fh);font-size:3rem;font-weight:900;line-height:1;letter-spacing:-.02em}
+.gsub{font-size:.72rem;color:var(--text-2);margin-top:.3rem;text-transform:uppercase;letter-spacing:.07em;font-family:var(--fb)}
+.rpill{padding:.45rem 1.6rem;border-radius:50px;font-family:var(--fh);font-size:.95rem;font-weight:700;letter-spacing:.01em}
+.rp-low   {background:rgba(15,212,160,.1); color:#0fd4a0;border:1px solid rgba(15,212,160,.25)}
+.rp-medium{background:rgba(245,177,0,.1);  color:#f5b100;border:1px solid rgba(245,177,0,.25)}
+.rp-high  {background:rgba(255,77,109,.1); color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.gdesc{font-size:.875rem;color:var(--text-2);text-align:center;max-width:280px;line-height:1.7}
+
+/* clinical pills */
+.cpills{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+.cpill{
+  display:flex;align-items:center;gap:.4rem;
+  padding:.3rem .8rem;border-radius:7px;
+  background:rgba(255,255,255,.04);border:1px solid var(--bdr);
+  font-size:.78rem;font-weight:500;font-family:var(--fb);
+}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── FEATURE BARS ── */
+.feat-card{padding:2rem}
+.card-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem;font-family:var(--fh)}
+.card-title i{color:var(--azure-l);font-size:.9rem}
+.fbar-row{display:flex;align-items:center;gap:.85rem;margin-bottom:.9rem}
+.fbar-row:last-child{margin-bottom:0}
+.fbar-lbl{font-size:.82rem;min-width:118px;color:var(--text-2);font-family:var(--fb)}
+.fbar-track{flex:1;background:rgba(255,255,255,.05);border-radius:3px;height:6px;overflow:hidden}
+.fbar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.fbar-pct{font-size:.78rem;color:var(--text-3);width:38px;text-align:right;font-family:var(--fb)}
+.ibadge{font-size:.62rem;padding:.14rem .46rem;border-radius:4px;font-weight:700;font-family:var(--fb);flex-shrink:0}
+.ib-high  {background:rgba(255,77,109,.15); color:#ff7fa0}
+.ib-medium{background:rgba(245,177,0,.15);  color:#f9cc3e}
+.ib-low   {background:rgba(61,127,255,.15); color:var(--azure-l)}
+
+/* ── RADAR ── */
+.radar-card{padding:2rem}
+
+/* ── ADVICE ── */
+.advice-card{padding:2rem}
+.advice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;margin-top:1rem}
+.adv{
+  background:rgba(255,255,255,.03);border:1px solid var(--bdr2);
+  border-radius:var(--rs);padding:.9rem 1.1rem;
+  font-size:.855rem;color:var(--text-2);line-height:1.65;font-family:var(--fb);
+}
+
+/* ── WHATIF ── */
+.wi-card{padding:2rem}
+.wi-sub{font-size:.8rem;font-weight:400;color:var(--text-3);margin-left:.5rem}
+.wi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:1.25rem;margin:1.35rem 0}
+.wi-field label{
+  font-size:.78rem;font-weight:600;color:var(--text-2);font-family:var(--fb);
+  display:flex;justify-content:space-between;margin-bottom:.4rem;
+}
+.wi-field label span{color:var(--azure-l);font-weight:700}
+input[type=range]{
+  width:100%;height:5px;border-radius:3px;outline:none;cursor:pointer;-webkit-appearance:none;
+  background:linear-gradient(90deg,var(--azure) var(--pct,0%),rgba(255,255,255,.08) var(--pct,0%));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--azure);box-shadow:0 0 0 3px rgba(61,127,255,.22),0 2px 8px rgba(0,0,0,.4);
+  transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.wi-res{
+  display:flex;align-items:center;gap:1.75rem;flex-wrap:wrap;
+  padding:1.35rem;border-radius:var(--rs);
+  background:var(--ink-2);border:1px solid var(--bdr);
+}
+.wi-prob{font-family:var(--fh);font-size:2.6rem;font-weight:900;line-height:1}
+.wi-hint{font-size:.82rem;color:var(--text-3);font-family:var(--fb)}
+
+/* ── PATIENT SUMMARY ── */
+.summary-card{padding:1.75rem}
+.summ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-top:1rem}
+.summ-item{background:var(--ink-2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.9rem}
+.summ-k{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);font-family:var(--fb)}
+.summ-v{font-size:.95rem;font-weight:600;margin-top:.3rem;color:var(--text)}
+</style>
+{% endblock %}
+
+{% set r = result %}
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="rh">
+  <div class="c-md rh-inner">
+    <div>
+      <div class="badge badge-{{ 'mint' if r.risk_key=='low' else ('gold' if r.risk_key=='medium' else 'coral') }} mb1">
+        <i class="fas fa-{{ 'check-circle' if r.risk_key=='low' else ('exclamation-circle' if r.risk_key=='medium' else 'triangle-exclamation') }}"></i>
+        {{ r.risk_label }}
+      </div>
+      <h1>Results for <span class="shine">{{ r.input.name }}</span></h1>
+      <p>Diabetes risk assessment · {{ r.probability }}% probability · {{ 'Diabetic' if r.probability >= 50 else 'Non-Diabetic' }}</p>
+    </div>
+    <div class="rh-right">
+      <a href="/predict" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> New Prediction</a>
+      <button class="btn btn-green" id="dlBtn" onclick="downloadPDF()">
+        <i class="fas fa-file-pdf"></i> Download Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="result-body">
+  <div class="c-md">
+    <div class="rg">
+
+      <!-- ── GAUGE ── -->
+      <div class="card gauge-card rv" id="gc">
+        <div class="gw">
+          <svg class="gsvg" width="210" height="210" viewBox="0 0 210 210">
+            <circle class="gtrack" cx="105" cy="105" r="87"/>
+            <circle class="gfill" id="gf" cx="105" cy="105" r="87"
+              stroke="{{ r.risk_color }}"
+              stroke-dasharray="0 547"/>
+          </svg>
+          <div class="gcenter">
+            <div class="gpct" id="gpct" style="color:{{ r.risk_color }}">0%</div>
+            <div class="gsub">Diabetes Risk</div>
+          </div>
+        </div>
+        <div class="rpill rp-{{ r.risk_key }}">{{ r.risk_label }}</div>
+        <div class="gdesc">
+          {% if r.risk_key == 'low' %}Low probability of diabetes. Your current biomarkers look encouraging — keep up the healthy habits.
+          {% elif r.risk_key == 'medium' %}Moderate diabetes risk detected. Lifestyle changes and medical consultation are strongly recommended.
+          {% else %}High diabetes probability. Please consult a healthcare professional urgently.{% endif %}
+        </div>
+        <div class="cpills">
+          {% for key, label in [('blood_glucose_level','Blood Glucose'),('HbA1c_level','HbA1c'),('bmi','BMI')] %}
+          {% if r.clinical[key] %}
+          <div class="cpill">
+            <div class="cdot" style="background:{{ r.clinical[key].color }}"></div>
+            <span>{{ label }}: <b>{{ r.clinical[key].value }}</b> — {{ r.clinical[key].status }}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── PATIENT SUMMARY ── -->
+      <div class="card summary-card rv d1r">
+        <div class="card-title"><i class="fas fa-user-circle"></i> Patient Summary</div>
+        <div class="summ-grid">
+          <div class="summ-item"><div class="summ-k">Name</div><div class="summ-v">{{ r.input.name }}</div></div>
+          <div class="summ-item"><div class="summ-k">Gender</div><div class="summ-v">{{ r.input.gender }}</div></div>
+          <div class="summ-item"><div class="summ-k">Age</div><div class="summ-v">{{ r.input.age }} years</div></div>
+          <div class="summ-item"><div class="summ-k">BMI</div><div class="summ-v">{{ r.input.bmi }} kg/m²</div></div>
+          <div class="summ-item"><div class="summ-k">Blood Glucose</div><div class="summ-v">{{ r.input.blood_glucose_level }} mg/dL</div></div>
+          <div class="summ-item"><div class="summ-k">HbA1c</div><div class="summ-v">{{ r.input.HbA1c_level }}%</div></div>
+          <div class="summ-item"><div class="summ-k">Hypertension</div><div class="summ-v">{{ 'Yes' if r.input.hypertension|int else 'No' }}</div></div>
+          <div class="summ-item"><div class="summ-k">Heart Disease</div><div class="summ-v">{{ 'Yes' if r.input.heart_disease|int else 'No' }}</div></div>
+          <div class="summ-item"><div class="summ-k">Smoking</div><div class="summ-v">{{ r.input.smoking_history|title }}</div></div>
+        </div>
+      </div>
+
+      <!-- ── FEATURE IMPACT ── -->
+      <div class="card feat-card rv d2r">
+        <div class="card-title"><i class="fas fa-chart-bar"></i> Feature Impact Analysis</div>
+        {% set max_score = r.feat_impact[0].score %}
+        {% for f in r.feat_impact %}
+        {% set lvl = 'high' if f.score > 15 else ('medium' if f.score > 7 else 'low') %}
+        {% set col = '#ff4d6d' if lvl=='high' else ('#f5b100' if lvl=='medium' else '#3d7fff') %}
+        <div class="fbar-row">
+          <div class="fbar-lbl">{{ f.feature }}</div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:{{ (f.score/max_score*100)|round }}%;background:{{ col }}"></div></div>
+          <div class="fbar-pct">{{ f.score }}%</div>
+          <div class="ibadge ib-{{ lvl }}">{{ lvl|capitalize }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- ── RADAR ── -->
+      <div class="card radar-card rv d3r">
+        <div class="card-title"><i class="fas fa-spider"></i> Patient vs Healthy Profile</div>
+        <canvas id="rc" style="max-height:300px"></canvas>
+      </div>
+
+      <!-- ── ADVICE (full) ── -->
+      <div class="card advice-card full rv d4r">
+        <div class="card-title"><i class="fas fa-stethoscope"></i> Personalised Health Recommendations</div>
+        <div class="advice-grid">
+          {% for a in r.advice %}<div class="adv">{{ a }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <!-- ── WHAT-IF (full) ── -->
+      <div class="card wi-card full rv d5r">
+        <div class="card-title">
+          <i class="fas fa-sliders"></i> What-If Simulator
+          <span class="wi-sub">— drag sliders to see live risk changes</span>
+        </div>
+        <div class="wi-grid" id="wiGrid"></div>
+        <div class="wi-res">
+          <div>
+            <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;font-family:var(--fb);margin-bottom:.3rem">Simulated Risk</div>
+            <div class="wi-prob" id="wiProb">{{ r.probability }}%</div>
+          </div>
+          <div class="rpill rp-{{ r.risk_key }}" id="wiBadge" style="align-self:flex-start">{{ r.risk_label }}</div>
+          <div class="wi-hint">Adjust glucose, HbA1c, BMI, or age to see how each factor affects your predicted risk in real time.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+/* ════════ GAUGE ANIMATION ════════ */
+const CIRCUM = 2 * Math.PI * 87; // ≈ 546.6
+const TARGET = {{ r.probability }};
+const FILL = document.getElementById('gf');
+const PCT  = document.getElementById('gpct');
+
+setTimeout(() => {
+  FILL.style.strokeDasharray = `${(TARGET/100)*CIRCUM} ${CIRCUM}`;
+}, 100);
+(function animCount(){
+  const start = performance.now();
+  (function go(t){
+    const p = Math.min((t-start)/1400, 1);
+    const e = 1 - Math.pow(1-p, 3);
+    PCT.textContent = Math.round(TARGET*e) + '%';
+    if(p < 1) requestAnimationFrame(go);
+  })(start);
+})();
+
+/* ════════ RADAR ════════ */
+const radarData = {{ r.radar | tojson }};
+new Chart(document.getElementById('rc').getContext('2d'), {
+  type: 'radar',
+  data: {
+    labels: radarData.labels,
+    datasets: [
+      { label:'You', data:radarData.patient,
+        borderColor:'#ff4d6d', backgroundColor:'rgba(255,77,109,.12)',
+        borderWidth:2.5, pointBackgroundColor:'#ff4d6d', pointRadius:5 },
+      { label:'Healthy Ref.', data:radarData.healthy,
+        borderColor:'#0fd4a0', backgroundColor:'rgba(15,212,160,.07)',
+        borderWidth:2, borderDash:[5,4],
+        pointBackgroundColor:'#0fd4a0', pointRadius:3 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{ legend:{ labels:{ color:'#8b95a9', font:{size:11, family:"'Manrope',sans-serif"}, boxWidth:12 } } },
+    scales:{ r:{
+      min:0, max:100,
+      grid:{ color:'rgba(255,255,255,.05)' },
+      angleLines:{ color:'rgba(255,255,255,.07)' },
+      ticks:{ color:'#566070', backdropColor:'transparent', stepSize:25, font:{size:9} },
+      pointLabels:{ color:'#8b95a9', font:{size:10, family:"'Manrope',sans-serif"} }
+    }}
+  }
+});
+
+/* ════════ WHAT-IF ════════ */
+const INP = {{ r.input | tojson }};
+const WI = [
+  {id:'blood_glucose_level',label:'Blood Glucose (mg/dL)',min:50, max:400,step:1},
+  {id:'HbA1c_level',        label:'HbA1c (%)',            min:3,  max:15, step:0.1},
+  {id:'bmi',                label:'BMI (kg/m²)',           min:10, max:60, step:0.1},
+  {id:'age',                label:'Age (years)',           min:1,  max:100,step:1},
+];
+
+(function buildWI(){
+  const g = document.getElementById('wiGrid');
+  WI.forEach(f=>{
+    const v = parseFloat(INP[f.id]) || (f.min+f.max)/2;
+    const pct = ((v-f.min)/(f.max-f.min)*100).toFixed(1);
+    g.innerHTML += `<div class="wi-field">
+      <label>${f.label} <span id="wv-${f.id}">${v}</span></label>
+      <input type="range" id="ws-${f.id}" min="${f.min}" max="${f.max}"
+             step="${f.step}" value="${v}" style="--pct:${pct}%"
+             oninput="onSlide(this,'${f.id}',${f.min},${f.max})"/>
+    </div>`;
+  });
+})();
+
+let wiT=null;
+function onSlide(el,id,min,max){
+  document.getElementById('wv-'+id).textContent = el.value;
+  const pct = ((+el.value-min)/(max-min)*100).toFixed(1)+'%';
+  el.style.setProperty('--pct', pct);
+  clearTimeout(wiT);
+  wiT = setTimeout(()=>runWI(), 230);
+}
+
+function getWIPayload(){
+  const d = {...INP};
+  WI.forEach(f=>{ d[f.id] = document.getElementById('ws-'+f.id).value; });
+  return d;
+}
+
+async function runWI(){
+  try{
+    const res = await fetch('/api/whatif',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(getWIPayload())
+    });
+    const data = await res.json();
+    if(!data.success) return;
+    const prob = document.getElementById('wiProb');
+    prob.textContent = data.probability.toFixed(1)+'%';
+    const col = data.risk_key==='low'?'#0fd4a0':data.risk_key==='medium'?'#f5b100':'#ff4d6d';
+    prob.style.color = col;
+    const badge = document.getElementById('wiBadge');
+    badge.textContent = data.risk_label;
+    badge.className = 'rpill rp-'+data.risk_key;
+  }catch(e){}
+}
+
+/* ════════ PDF ════════ */
+const RESULT_DATA = {{ r | tojson }};
+async function downloadPDF(){
+  const btn = document.getElementById('dlBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML='<div class="spin"></div> Generating…';btn.disabled=true;
+  try{
+    const res = await fetch('/api/report',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(RESULT_DATA)
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`DiabetesAI_${Date.now()}.pdf`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('✅ Report downloaded!','success');
+  }catch(e){showToast('❌ Download failed.')}
+  finally{btn.innerHTML=orig;btn.disabled=false}
+}
+
+/* reveal */
+setTimeout(()=>{
+  document.querySelectorAll('.rv').forEach(el=>el.classList.add('in'));
+}, 60);
+</script>
+{% endblock %}

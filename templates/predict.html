@@ -1,0 +1,828 @@
+{% extends "base.html" %}
+{% set active = "predict" %}
+{% block title %}Predict — DiabetesAI{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ══════════════════════════════════════════════════
+   PAGE HEADER
+══════════════════════════════════════════════════ */
+.predict-header {
+  padding: 2.75rem 0 2.25rem;
+  border-bottom: 1px solid var(--bdr);
+  background: linear-gradient(to bottom, rgba(61,127,255,.03), transparent);
+}
+.predict-header h1 {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  letter-spacing: -.025em;
+  margin: .6rem 0 .45rem;
+  line-height: 1.2;
+}
+.predict-header p {
+  color: var(--text-2);
+  font-size: .9rem;
+  font-family: var(--fb);
+  max-width: 520px;
+}
+
+/* ══════════════════════════════════════════════════
+   TWO-COLUMN LAYOUT
+══════════════════════════════════════════════════ */
+.predict-body {
+  padding: 2.25rem 0 5rem;
+}
+.predict-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.75rem;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .predict-grid { grid-template-columns: 1fr; }
+  .sidebar-col { order: -1; }
+}
+
+/* ══════════════════════════════════════════════════
+   FORM CARD
+══════════════════════════════════════════════════ */
+.form-card {
+  padding: 1.75rem 1.75rem 2rem;
+}
+
+/* Error banner */
+.err-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  background: rgba(255,77,109,.06);
+  border: 1px solid rgba(255,77,109,.25);
+  border-left: 3px solid var(--coral);
+  border-radius: var(--rs);
+  padding: .85rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #ff8fa0;
+  font-size: .855rem;
+  font-family: var(--fb);
+  line-height: 1.5;
+}
+.err-alert i { flex-shrink: 0; margin-top: .1rem; }
+
+/* Section header */
+.fsec {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  margin: 1.6rem 0 1.1rem;
+}
+.fsec:first-child { margin-top: 0; }
+.fsec-lbl {
+  font-size: .66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-3);
+  font-family: var(--fb);
+  white-space: nowrap;
+}
+.fsec-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--bdr), transparent);
+}
+
+/* Field */
+.f {
+  margin-bottom: .95rem;
+}
+.f:last-child { margin-bottom: 0; }
+.f-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .85rem;
+}
+
+/* Label */
+.fl {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .775rem;
+  font-weight: 600;
+  color: var(--text-2);
+  font-family: var(--fb);
+  margin-bottom: .38rem;
+  cursor: default;
+  user-select: none;
+}
+.fl i {
+  color: var(--azure-l);
+  font-size: .73rem;
+  width: 13px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Input/select wrapper */
+.fi {
+  position: relative;
+}
+
+/* Inputs */
+.fi input[type="text"],
+.fi input[type="number"],
+.fi select {
+  width: 100%;
+  height: 42px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px;
+  padding: 0 1rem;
+  color: var(--text);
+  font-size: .885rem;
+  font-family: var(--fb);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color .18s, background .18s, box-shadow .18s;
+}
+.fi input[type="text"]:focus,
+.fi input[type="number"]:focus,
+.fi select:focus {
+  border-color: rgba(61,127,255,.45);
+  background: rgba(61,127,255,.055);
+  box-shadow: 0 0 0 3px rgba(61,127,255,.1);
+}
+.fi input::placeholder { color: var(--text-3); }
+.fi select option { background: #1c2333; color: var(--text); }
+
+/* Select chevron */
+.fi select { padding-right: 2.4rem; cursor: pointer; }
+.fi.sel::after {
+  content: '';
+  position: absolute;
+  right: .95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-3);
+  pointer-events: none;
+}
+
+/* Status badge inside input */
+.fbadge {
+  position: absolute;
+  right: .65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: .2rem .55rem;
+  border-radius: 5px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--fb);
+  opacity: 0;
+  transition: opacity .18s;
+}
+.fbadge.visible {
+  opacity: 1;
+}
+/* Input shrinks when badge visible */
+.fi input.with-badge { padding-right: 92px; }
+
+/* Hint text */
+.fhint {
+  margin-top: .32rem;
+  font-size: .71rem;
+  color: var(--text-3);
+  font-family: var(--fb);
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.fhint i { color: rgba(61,127,255,.5); font-size: .67rem; }
+
+/* BMI calculator link */
+.bmi-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: .32rem;
+  font-size: .72rem;
+  font-weight: 500;
+  color: var(--azure-l);
+  font-family: var(--fb);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color .18s;
+}
+.bmi-link:hover { color: var(--ice); }
+.bmi-link i { font-size: .68rem; }
+
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 1.6rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--azure), var(--azure-d));
+  color: white;
+  font-size: .92rem;
+  font-weight: 700;
+  font-family: var(--fb);
+  letter-spacing: .01em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+  box-shadow: 0 4px 20px rgba(61,127,255,.4);
+}
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(61,127,255,.55);
+}
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════ */
+.sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 80px;
+}
+
+.sc {
+  padding: 1.35rem 1.5rem;
+}
+.sc-title {
+  font-family: var(--fh);
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin-bottom: 1.1rem;
+}
+.sc-title i {
+  color: var(--azure-l);
+  font-size: .82rem;
+}
+
+/* Range table */
+.rtbl { width: 100%; border-collapse: collapse; }
+.rtbl th {
+  font-size: .63rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-3);
+  font-family: var(--fb);
+  font-weight: 700;
+  padding: .38rem .55rem;
+  border-bottom: 1px solid var(--bdr);
+  text-align: left;
+}
+.rtbl td {
+  font-size: .76rem;
+  padding: .45rem .55rem;
+  color: var(--text-2);
+  font-family: var(--fb);
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  vertical-align: middle;
+}
+.rtbl tr:last-child td { border-bottom: none; }
+.rtbl tr:hover td { background: rgba(255,255,255,.02); }
+.rdot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: .38rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Tip items */
+.tip {
+  display: flex;
+  gap: .75rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.tip:last-child { border-bottom: none; padding-bottom: 0; }
+.tip-ico {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .82rem;
+}
+.tip b {
+  display: block;
+  font-size: .78rem;
+  font-family: var(--fb);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: .18rem;
+}
+.tip p {
+  font-size: .75rem;
+  color: var(--text-2);
+  font-family: var(--fb);
+  line-height: 1.55;
+}
+
+/* ══════════════════════════════════════════════════
+   BMI MODAL
+══════════════════════════════════════════════════ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.bmi-dialog {
+  background: var(--ink-1);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  padding: 2rem;
+  width: min(420px, 92vw);
+  position: relative;
+  box-shadow: 0 40px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(61,127,255,.08);
+  animation: dlg-in .26s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes dlg-in {
+  from { transform: scale(.88) translateY(12px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);     opacity: 1; }
+}
+.dlg-close {
+  position: absolute;
+  top: .9rem; right: .9rem;
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  transition: background .18s, color .18s;
+}
+.dlg-close:hover { background: rgba(255,255,255,.12); color: var(--text); }
+.bmi-dialog h3 {
+  font-size: 1rem;
+  margin-bottom: 1.35rem;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding-right: 2rem;
+}
+.bmi-dialog h3 i { color: var(--azure-l); }
+
+.bmi-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .8rem;
+}
+/* override field margin inside modal */
+.bmi-dialog .f { margin-bottom: 0; }
+
+.bmi-output {
+  display: none;
+  margin-top: 1.1rem;
+  padding: 1.1rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  text-align: center;
+}
+.bmi-output.visible { display: block; }
+.bmi-num {
+  font-family: var(--fh);
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.bmi-label {
+  font-size: .84rem;
+  color: var(--text-2);
+  font-family: var(--fb);
+  margin-top: .3rem;
+}
+.bmi-apply-btn {
+  width: 100%;
+  margin-top: .9rem;
+  display: none;
+}
+.bmi-apply-btn.visible { display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ HEADER ══ -->
+<div class="predict-header">
+  <div class="c-md">
+    <span class="badge badge-blue"><i class="fas fa-brain"></i> AI Risk Assessment</span>
+    <h1>Diabetes Risk <span class="shine">Prediction</span></h1>
+    <p>Fill in all fields below for the most accurate result. Clinical range indicators appear as you type.</p>
+  </div>
+</div>
+
+<!-- ══ BODY ══ -->
+<div class="predict-body">
+  <div class="c-md">
+    <div class="predict-grid">
+
+      <!-- ════ FORM COLUMN ════ -->
+      <div>
+        <div class="card form-card">
+
+          {% if error %}
+          <div class="err-alert">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>{{ error }}</span>
+          </div>
+          {% endif %}
+
+          <form method="POST" action="/predict" id="mainForm" novalidate>
+
+            <!-- Patient Details -->
+            <div class="fsec">
+              <span class="fsec-lbl">Patient Details</span>
+              <div class="fsec-rule"></div>
+            </div>
+
+            <div class="f">
+              <div class="fl"><i class="fas fa-user"></i> Full Name <span style="color:var(--text-3);font-weight:400;margin-left:.25rem;font-size:.7rem">(optional)</span></div>
+              <div class="fi">
+                <input type="text" name="name" placeholder="e.g. John Smith"
+                       value="{{ (form_data or {}).get('name','') }}"/>
+              </div>
+            </div>
+
+            <div class="f-row-2">
+              <div class="f">
+                <div class="fl"><i class="fas fa-venus-mars"></i> Gender</div>
+                <div class="fi sel">
+                  <select name="gender">
+                    <option value="">Select…</option>
+                    <option value="Male"   {% if (form_data or {}).get('gender')=='Male'   %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if (form_data or {}).get('gender')=='Female' %}selected{% endif %}>Female</option>
+                    <option value="Other"  {% if (form_data or {}).get('gender')=='Other'  %}selected{% endif %}>Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="f">
+                <div class="fl"><i class="fas fa-calendar-days"></i> Age (years)</div>
+                <div class="fi">
+                  <input type="number" name="age" min="1" max="120" placeholder="e.g. 45"
+                         value="{{ (form_data or {}).get('age','') }}"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Biomarkers -->
+            <div class="fsec">
+              <span class="fsec-lbl">Biomarkers</span>
+              <div class="fsec-rule"></div>
+            </div>
+
+            <div class="f">
+              <div class="fl"><i class="fas fa-droplet"></i> Blood Glucose (mg/dL)</div>
+              <div class="fi">
+                <input type="number" id="inp-g" name="blood_glucose_level"
+                       min="50" max="600" placeholder="e.g. 140"
+                       value="{{ (form_data or {}).get('blood_glucose_level','') }}"
+                       oninput="liveRange(this,'g')"/>
+                <span class="fbadge" id="cb-g"></span>
+              </div>
+              <div class="fhint"><i class="fas fa-circle-info"></i> Normal fasting: 70–99 mg/dL</div>
+            </div>
+
+            <div class="f">
+              <div class="fl"><i class="fas fa-flask-vial"></i> HbA1c Level (%)</div>
+              <div class="fi">
+                <input type="number" id="inp-h" name="HbA1c_level"
+                       min="3" max="15" step="0.1" placeholder="e.g. 6.5"
+                       value="{{ (form_data or {}).get('HbA1c_level','') }}"
+                       oninput="liveRange(this,'h')"/>
+                <span class="fbadge" id="cb-h"></span>
+              </div>
+              <div class="fhint"><i class="fas fa-circle-info"></i> Normal &lt;5.7% · Pre-diabetic 5.7–6.4% · Diabetic ≥6.5%</div>
+            </div>
+
+            <div class="f">
+              <div class="fl"><i class="fas fa-weight-scale"></i> BMI (kg/m²)</div>
+              <div class="fi">
+                <input type="number" id="inp-b" name="bmi"
+                       min="10" max="70" step="0.1" placeholder="e.g. 27.5"
+                       value="{{ (form_data or {}).get('bmi','') }}"
+                       oninput="liveRange(this,'b')"/>
+                <span class="fbadge" id="cb-b"></span>
+              </div>
+              <button type="button" class="bmi-link" onclick="openBMI()">
+                <i class="fas fa-calculator"></i> Calculate my BMI
+              </button>
+            </div>
+
+            <!-- Medical History -->
+            <div class="fsec">
+              <span class="fsec-lbl">Medical History</span>
+              <div class="fsec-rule"></div>
+            </div>
+
+            <div class="f-row-2">
+              <div class="f">
+                <div class="fl"><i class="fas fa-heart-pulse"></i> Hypertension</div>
+                <div class="fi sel">
+                  <select name="hypertension">
+                    <option value="">Select…</option>
+                    <option value="0" {% if (form_data or {}).get('hypertension')=='0' %}selected{% endif %}>No</option>
+                    <option value="1" {% if (form_data or {}).get('hypertension')=='1' %}selected{% endif %}>Yes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="f">
+                <div class="fl"><i class="fas fa-heart"></i> Heart Disease</div>
+                <div class="fi sel">
+                  <select name="heart_disease">
+                    <option value="">Select…</option>
+                    <option value="0" {% if (form_data or {}).get('heart_disease')=='0' %}selected{% endif %}>No</option>
+                    <option value="1" {% if (form_data or {}).get('heart_disease')=='1' %}selected{% endif %}>Yes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="f">
+              <div class="fl"><i class="fas fa-smoking"></i> Smoking History</div>
+              <div class="fi sel">
+                <select name="smoking_history">
+                  <option value="">Select…</option>
+                  {% for opt in smoking_opts %}
+                  <option value="{{ opt.val }}"
+                    {% if (form_data or {}).get('smoking_history')==opt.val %}selected{% endif %}>
+                    {{ opt.label }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="subBtn">
+              <i class="fas fa-brain"></i> Analyse &amp; Predict Risk
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- ════ SIDEBAR ════ -->
+      <aside class="sidebar-col">
+
+        <div class="card sc">
+          <div class="sc-title"><i class="fas fa-table-cells"></i> Clinical Reference Ranges</div>
+          <table class="rtbl">
+            <thead>
+              <tr><th>Marker</th><th>Range</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Blood Glucose</td><td>70–99 mg/dL</td><td><span class="rdot" style="background:var(--mint)"></span>Normal</td></tr>
+              <tr><td>Blood Glucose</td><td>100–125</td><td><span class="rdot" style="background:var(--gold)"></span>Pre-diab.</td></tr>
+              <tr><td>Blood Glucose</td><td>≥126</td><td><span class="rdot" style="background:var(--coral)"></span>Diabetic</td></tr>
+              <tr><td>HbA1c</td><td>&lt;5.7%</td><td><span class="rdot" style="background:var(--mint)"></span>Normal</td></tr>
+              <tr><td>HbA1c</td><td>5.7–6.4%</td><td><span class="rdot" style="background:var(--gold)"></span>Pre-diab.</td></tr>
+              <tr><td>HbA1c</td><td>≥6.5%</td><td><span class="rdot" style="background:var(--coral)"></span>Diabetic</td></tr>
+              <tr><td>BMI</td><td>18.5–24.9</td><td><span class="rdot" style="background:var(--mint)"></span>Healthy</td></tr>
+              <tr><td>BMI</td><td>25–29.9</td><td><span class="rdot" style="background:var(--gold)"></span>Overweight</td></tr>
+              <tr><td>BMI</td><td>≥30</td><td><span class="rdot" style="background:var(--coral)"></span>Obese</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card sc">
+          <div class="sc-title"><i class="fas fa-lightbulb"></i> Tips for Accuracy</div>
+          <div class="tip">
+            <div class="tip-ico" style="background:rgba(61,127,255,.1)"><i class="fas fa-clock" style="color:var(--azure-l)"></i></div>
+            <div><b>Fasting glucose</b><p>Most accurate after 8+ hours of fasting. Note if post-meal.</p></div>
+          </div>
+          <div class="tip">
+            <div class="tip-ico" style="background:rgba(15,212,160,.1)"><i class="fas fa-vial" style="color:var(--mint)"></i></div>
+            <div><b>Recent HbA1c</b><p>Use your latest lab result, ideally within the last 3 months.</p></div>
+          </div>
+          <div class="tip">
+            <div class="tip-ico" style="background:rgba(245,177,0,.1)"><i class="fas fa-weight-scale" style="color:var(--gold)"></i></div>
+            <div><b>Accurate BMI</b><p>Use measured height and weight. Hit <em>Calculate my BMI</em> if unsure.</p></div>
+          </div>
+          <div class="tip">
+            <div class="tip-ico" style="background:rgba(255,77,109,.1)"><i class="fas fa-stethoscope" style="color:var(--coral)"></i></div>
+            <div><b>Not a diagnosis</b><p>This tool screens risk, not diagnoses. Always consult a physician.</p></div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BMI MODAL ══ -->
+<div class="modal-overlay" id="bmiOverlay" onclick="bmiOverlayClick(event)">
+  <div class="bmi-dialog">
+    <button class="dlg-close" type="button" onclick="closeBMI()">
+      <i class="fas fa-xmark"></i>
+    </button>
+    <h3><i class="fas fa-calculator"></i> BMI Calculator</h3>
+
+    <div class="bmi-form-grid">
+      <div class="f">
+        <div class="fl">Height unit</div>
+        <div class="fi sel">
+          <select id="bmi-unit" onchange="toggleBMIUnit()">
+            <option value="cm">Centimetres</option>
+            <option value="ft">Feet &amp; Inches</option>
+          </select>
+        </div>
+      </div>
+      <div class="f">
+        <div class="fl">Weight (kg)</div>
+        <div class="fi">
+          <input type="number" id="bmi-kg" placeholder="e.g. 72" oninput="calcBMI()" min="10" max="300"/>
+        </div>
+      </div>
+      <div class="f" id="bmi-cm-row">
+        <div class="fl">Height (cm)</div>
+        <div class="fi">
+          <input type="number" id="bmi-cm" placeholder="e.g. 170" oninput="calcBMI()" min="50" max="250"/>
+        </div>
+      </div>
+      <div class="f" id="bmi-ft-row" style="display:none">
+        <div class="fl">Feet</div>
+        <div class="fi">
+          <input type="number" id="bmi-ft" placeholder="5" oninput="calcBMI()" min="1" max="8"/>
+        </div>
+      </div>
+      <div class="f" id="bmi-in-row" style="display:none">
+        <div class="fl">Inches</div>
+        <div class="fi">
+          <input type="number" id="bmi-in" placeholder="7" oninput="calcBMI()" min="0" max="11"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="bmi-output" id="bmiOutput">
+      <div class="bmi-num" id="bmiNum">—</div>
+      <div class="bmi-label" id="bmiLabel">—</div>
+    </div>
+
+    <button type="button" class="btn btn-primary bmi-apply-btn" id="bmiApply" onclick="applyBMI()">
+      <i class="fas fa-check"></i> Use this BMI
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Clinical range badges ── */
+const CFG = {
+  g: { badge: 'cb-g', inp: 'inp-g', ranges: [
+    { lo:70,  hi:99,  label:'Normal',       col:'#0fd4a0' },
+    { lo:100, hi:125, label:'Pre-diabetic', col:'#f5b100' },
+    { lo:126, hi:600, label:'Diabetic',     col:'#ff4d6d' },
+  ]},
+  h: { badge: 'cb-h', inp: 'inp-h', ranges: [
+    { lo:4,   hi:5.6, label:'Normal',       col:'#0fd4a0' },
+    { lo:5.7, hi:6.4, label:'Pre-diabetic', col:'#f5b100' },
+    { lo:6.5, hi:15,  label:'Diabetic',     col:'#ff4d6d' },
+  ]},
+  b: { badge: 'cb-b', inp: 'inp-b', ranges: [
+    { lo:10,   hi:18.4, label:'Underweight', col:'#7aabff' },
+    { lo:18.5, hi:24.9, label:'Normal',      col:'#0fd4a0' },
+    { lo:25,   hi:29.9, label:'Overweight',  col:'#f5b100' },
+    { lo:30,   hi:70,   label:'Obese',       col:'#ff4d6d' },
+  ]},
+};
+
+function liveRange(el, key) {
+  const cfg   = CFG[key];
+  const badge = document.getElementById(cfg.badge);
+  const v     = parseFloat(el.value);
+
+  if (isNaN(v)) {
+    badge.classList.remove('visible');
+    el.classList.remove('with-badge');
+    return;
+  }
+  const hit = cfg.ranges.find(r => v >= r.lo && v <= r.hi);
+  if (hit) {
+    badge.textContent   = hit.label;
+    badge.style.cssText = `background:${hit.col}18;color:${hit.col};border:1px solid ${hit.col}40`;
+    badge.classList.add('visible');
+    el.classList.add('with-badge');
+  } else {
+    badge.classList.remove('visible');
+    el.classList.remove('with-badge');
+  }
+}
+
+/* Initialise badges for repopulated form fields */
+document.addEventListener('DOMContentLoaded', () => {
+  Object.keys(CFG).forEach(k => {
+    const el = document.getElementById(CFG[k].inp);
+    if (el && el.value) liveRange(el, k);
+  });
+});
+
+/* ── Submit loading state ── */
+document.getElementById('mainForm').addEventListener('submit', () => {
+  const btn = document.getElementById('subBtn');
+  btn.innerHTML = '<div class="spin"></div> Analysing…';
+  btn.disabled  = true;
+});
+
+/* ── BMI Calculator ── */
+let _bmi = null;
+const bmiOverlay = document.getElementById('bmiOverlay');
+function openBMI()  { bmiOverlay.classList.add('open'); }
+function closeBMI() { bmiOverlay.classList.remove('open'); }
+function bmiOverlayClick(e) { if (e.target === bmiOverlay) closeBMI(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBMI(); });
+
+function toggleBMIUnit() {
+  const isFt = document.getElementById('bmi-unit').value === 'ft';
+  document.getElementById('bmi-cm-row').style.display = isFt ? 'none' : '';
+  document.getElementById('bmi-ft-row').style.display = isFt ? '' : 'none';
+  document.getElementById('bmi-in-row').style.display = isFt ? '' : 'none';
+  calcBMI();
+}
+
+function calcBMI() {
+  const w = parseFloat(document.getElementById('bmi-kg').value);
+  const isFt = document.getElementById('bmi-unit').value === 'ft';
+  let hm;
+  if (isFt) {
+    const ft  = parseFloat(document.getElementById('bmi-ft').value) || 0;
+    const ins = parseFloat(document.getElementById('bmi-in').value) || 0;
+    hm = (ft * 12 + ins) * 0.0254;
+  } else {
+    const cm = parseFloat(document.getElementById('bmi-cm').value);
+    if (!cm || cm < 50) return;
+    hm = cm / 100;
+  }
+  if (!w || !hm || hm < 0.5) return;
+
+  const bmi = +(w / (hm * hm)).toFixed(1);
+  const cats = [
+    [10, 18.49, 'Underweight', '#7aabff'],
+    [18.5, 24.99, 'Normal',    '#0fd4a0'],
+    [25,   29.99, 'Overweight','#f5b100'],
+    [30,   70,    'Obese',     '#ff4d6d'],
+  ];
+  const cat = cats.find(c => bmi >= c[0] && bmi <= c[1]);
+  const numEl = document.getElementById('bmiNum');
+  numEl.textContent = bmi;
+  numEl.style.color = cat ? cat[3] : 'var(--azure-l)';
+  document.getElementById('bmiLabel').textContent = cat ? cat[2] : 'Out of range';
+  document.getElementById('bmiOutput').classList.add('visible');
+  document.getElementById('bmiApply').classList.add('visible');
+  _bmi = bmi;
+}
+
+function applyBMI() {
+  if (_bmi === null) return;
+  const el = document.getElementById('inp-b');
+  el.value = _bmi;
+  liveRange(el, 'b');
+  closeBMI();
+  showToast(`✅ BMI ${_bmi} applied`, 'success');
+}
+</script>
+{% endblock %}

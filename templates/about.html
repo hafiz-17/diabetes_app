@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% set active = "about" %}
+{% block title %}About — DiabetesAI{% endblock %}
+{% block head_extra %}
+<style>
+.ph{padding:3rem 0 2.5rem;border-bottom:1px solid var(--bdr)}
+.ph h1{font-size:clamp(1.6rem,3vw,2.4rem);letter-spacing:-.02em;margin-bottom:.5rem}
+.ph p{color:var(--text-2);font-size:.95rem}
+.alay{display:grid;grid-template-columns:1fr 330px;gap:2rem;padding:2.5rem 0 5rem;align-items:start}
+@media(max-width:900px){.alay{grid-template-columns:1fr}}
+
+.asec{margin-bottom:2rem}
+.asec h2{font-size:1.3rem;letter-spacing:-.01em;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.asec h2 i{color:var(--azure-l);font-size:1rem}
+.asec p{color:var(--text-2);line-height:1.8;font-family:var(--fb);font-size:.9rem;margin-bottom:.8rem}
+.asec p:last-child{margin-bottom:0}
+
+.step-list{list-style:none;margin-top:.75rem}
+.sli{display:flex;gap:.85rem;padding:.85rem 0;border-bottom:1px solid var(--bdr2)}
+.sli:last-child{border-bottom:none}
+.sn{width:28px;height:28px;border-radius:8px;flex-shrink:0;background:rgba(61,127,255,.1);border:1px solid rgba(61,127,255,.18);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--azure-l);font-family:var(--fb)}
+.stxt{font-size:.865rem;color:var(--text-2);line-height:1.7;padding-top:.2rem;font-family:var(--fb)}
+.stxt strong{color:var(--text)}
+
+.ftbl{width:100%;border-collapse:collapse;margin-top:.75rem}
+.ftbl th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);font-weight:700;padding:.55rem .85rem;border-bottom:1px solid var(--bdr);font-family:var(--fb)}
+.ftbl td{padding:.7rem .85rem;font-size:.86rem;color:var(--text-2);border-bottom:1px solid var(--bdr2);font-family:var(--fb)}
+.ftbl tr:last-child td{border-bottom:none}
+.ftbl tr:hover td{background:rgba(255,255,255,.02)}
+.fn{color:var(--text);font-weight:500}
+.ibar{display:flex;align-items:center;gap:.6rem}
+.ibg{flex:1;background:rgba(255,255,255,.05);height:5px;border-radius:3px;overflow:hidden}
+.ibf{height:100%;border-radius:3px}
+.inum{font-size:.78rem;color:var(--text-3);width:38px;text-align:right}
+.ibadge{font-size:.6rem;padding:.13rem .44rem;border-radius:4px;font-weight:700;width:50px;text-align:center;font-family:var(--fb)}
+
+.disc{background:rgba(255,77,109,.05);border:1px solid rgba(255,77,109,.18);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem}
+.disc h4{color:#ff7fa0;font-size:.9rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;font-family:var(--fh)}
+.disc p{font-size:.82rem;color:var(--text-2);line-height:1.8;font-family:var(--fb)}
+
+/* sidebar */
+.sidebar{display:flex;flex-direction:column;gap:1.25rem;position:sticky;top:80px}
+.scard{padding:1.5rem}
+.scard h4{font-size:.9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;font-family:var(--fh)}
+.scard h4 i{color:var(--azure-l);font-size:.85rem}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:.48rem 0;border-bottom:1px solid var(--bdr2)}
+.sr:last-child{border-bottom:none}
+.sk{font-size:.8rem;color:var(--text-2);font-family:var(--fb)}
+.sv{font-size:.8rem;font-weight:600;color:var(--text);font-family:var(--fb)}
+
+.rlevels{display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem}
+.rl{padding:1rem;border-radius:var(--rs);font-size:.82rem;font-family:var(--fb);line-height:1.6}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ph"><div class="c-md">
+  <div class="badge badge-blue mb2 rv"><i class="fas fa-circle-info"></i> About</div>
+  <h1 class="rv d1r">About <span class="shine">DiabetesAI</span></h1>
+  <p class="rv d2r">Understanding the model, dataset, methodology, and limitations of this system.</p>
+</div></div>
+
+<div class="c-md"><div class="alay">
+  <div>
+    <div class="asec card card-p rv">
+      <h2><i class="fas fa-robot"></i> What is DiabetesAI?</h2>
+      <p>DiabetesAI is an AI-powered diabetes risk screening tool that uses a Gradient Boosting machine learning model trained on 100,000 patient health records. It analyses 8 clinical biomarkers to generate a diabetes risk probability, classifying patients into Low, Medium, or High risk categories.</p>
+      <p>The system provides feature impact visualisation, clinical range interpretation, a what-if simulator, and a downloadable PDF report — designed to support, not replace, clinical decision-making.</p>
+    </div>
+
+    <div class="asec card card-p rv d1r" style="margin-top:1.5rem">
+      <h2><i class="fas fa-database"></i> Dataset</h2>
+      <p>The model was trained on a diabetes prediction dataset containing 100,000 patient records from electronic health records. Each record includes 8 clinical features and a binary diabetes diagnosis label.</p>
+      <ul class="step-list">
+        <li class="sli"><div class="sn">📊</div><div class="stxt"><strong>100,000 records</strong> — 8,500 diabetic (8.5%) and 91,500 non-diabetic (91.5%). Handled via stratified splitting to ensure proportional class representation in both sets.</div></li>
+        <li class="sli"><div class="sn">🔀</div><div class="stxt"><strong>80/20 split</strong> — 80,000 training records, 20,000 held out for evaluation. Stratification preserves class ratios in both splits.</div></li>
+        <li class="sli"><div class="sn">🔄</div><div class="stxt"><strong>5-Fold Cross-Validation</strong> — Performed across the full dataset to ensure the model generalises well and does not overfit. Mean CV accuracy: 97.18% ± 0.06%.</div></li>
+      </ul>
+    </div>
+
+    <div class="asec card card-p rv d2r" style="margin-top:1.5rem">
+      <h2><i class="fas fa-cogs"></i> Methodology</h2>
+      <ul class="step-list">
+        <li class="sli"><div class="sn">1</div><div class="stxt"><strong>Feature Engineering</strong> — Gender and smoking history are label-encoded. All 8 features are passed directly to the model; tree-based methods are invariant to monotonic transformations so no scaling is needed.</div></li>
+        <li class="sli"><div class="sn">2</div><div class="stxt"><strong>Gradient Boosting</strong> — 200 decision trees are built sequentially, each correcting errors of the previous. Learning rate (0.08) and subsample (0.8) prevent overfitting.</div></li>
+        <li class="sli"><div class="sn">3</div><div class="stxt"><strong>Probability Output</strong> — The model returns a calibrated probability via <code>predict_proba</code>, enabling the 3-tier risk classification (Low &lt;30%, Medium 30–60%, High &gt;60%).</div></li>
+        <li class="sli"><div class="sn">4</div><div class="stxt"><strong>Evaluation</strong> — Assessed on test accuracy (97.17%), ROC-AUC (0.979), Precision-Recall AUC (0.884), confusion matrix, and per-class F1 scores.</div></li>
+      </ul>
+    </div>
+
+    <div class="asec card card-p rv d3r" style="margin-top:1.5rem">
+      <h2><i class="fas fa-chart-bar"></i> Feature Importance</h2>
+      <p>Feature importance reflects the mean decrease in impurity across all 200 trees. HbA1c and Blood Glucose dominate due to their direct physiological relationship to diabetes.</p>
+      <table class="ftbl">
+        <thead><tr><th>Feature</th><th>Type</th><th>Importance</th><th></th></tr></thead>
+        <tbody>
+        {% for name, score in importances %}
+          {% set lvl = 'high' if score > 15 else ('medium' if score > 7 else 'low') %}
+          {% set col = '#ff4d6d' if lvl=='high' else ('#f5b100' if lvl=='medium' else '#3d7fff') %}
+          <tr>
+            <td class="fn">{{ name }}</td>
+            <td>{{ 'Categorical' if name in ['Gender','Smoking History'] else 'Numeric' }}</td>
+            <td>
+              <div class="ibar">
+                <div class="ibg"><div class="ibf" style="width:{{ [score/62.5*100,100]|min|round }}%;background:{{ col }}"></div></div>
+                <span class="inum">{{ score }}%</span>
+              </div>
+            </td>
+            <td><span class="ibadge" style="background:{{ col }}18;color:{{ col }}">{{ lvl|capitalize }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="disc rv d4r">
+      <h4><i class="fas fa-triangle-exclamation"></i> Medical Disclaimer</h4>
+      <p>DiabetesAI is an <strong>informational screening tool only</strong> and does not constitute medical advice, diagnosis, or treatment. Predictions are based on statistical patterns and may not apply to every individual. Always consult a licensed physician before making any medical decisions.</p>
+      <p style="margin-top:.65rem">If you are experiencing symptoms of diabetes (excessive thirst, frequent urination, fatigue, blurred vision), seek immediate medical attention.</p>
+    </div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.75rem">
+      <a href="/predict" class="btn btn-primary btn-lg"><i class="fas fa-brain"></i> Run Prediction</a>
+      <a href="/analytics" class="btn btn-ghost btn-lg"><i class="fas fa-chart-line"></i> Analytics</a>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="card scard rv d1r">
+      <h4><i class="fas fa-info-circle"></i> Model Summary</h4>
+      <div class="sr"><span class="sk">Algorithm</span><span class="sv">Gradient Boosting</span></div>
+      <div class="sr"><span class="sk">Accuracy</span><span class="sv" style="color:var(--mint)">97.17%</span></div>
+      <div class="sr"><span class="sk">ROC-AUC</span><span class="sv" style="color:var(--azure-l)">0.9790</span></div>
+      <div class="sr"><span class="sk">PR-AUC</span><span class="sv">0.8838</span></div>
+      <div class="sr"><span class="sk">CV Score</span><span class="sv">97.18% ± 0.06%</span></div>
+      <div class="sr"><span class="sk">Estimators</span><span class="sv">200</span></div>
+      <div class="sr"><span class="sk">Max Depth</span><span class="sv">5</span></div>
+      <div class="sr"><span class="sk">Learning Rate</span><span class="sv">0.08</span></div>
+    </div>
+    <div class="card scard rv d2r">
+      <h4><i class="fas fa-database"></i> Dataset</h4>
+      <div class="sr"><span class="sk">Total Records</span><span class="sv">100,000</span></div>
+      <div class="sr"><span class="sk">Diabetic</span><span class="sv" style="color:var(--coral)">8,500 (8.5%)</span></div>
+      <div class="sr"><span class="sk">Non-Diabetic</span><span class="sv" style="color:var(--mint)">91,500 (91.5%)</span></div>
+      <div class="sr"><span class="sk">Train Set</span><span class="sv">80,000</span></div>
+      <div class="sr"><span class="sk">Test Set</span><span class="sv">20,000</span></div>
+      <div class="sr"><span class="sk">Features</span><span class="sv">8</span></div>
+    </div>
+    <div class="card scard rv d3r">
+      <h4><i class="fas fa-gauge-high"></i> Risk Levels</h4>
+      <div class="rlevels">
+        <div class="rl" style="background:rgba(15,212,160,.07);border:1px solid rgba(15,212,160,.18)"><strong style="color:var(--mint)">Low Risk (&lt;30%)</strong><br><span style="color:var(--text-2)">Low probability. Maintain healthy habits and schedule annual check-ups.</span></div>
+        <div class="rl" style="background:rgba(245,177,0,.07);border:1px solid rgba(245,177,0,.18)"><strong style="color:var(--gold)">Medium Risk (30–60%)</strong><br><span style="color:var(--text-2)">Moderate risk. Lifestyle intervention and medical consultation recommended.</span></div>
+        <div class="rl" style="background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.18)"><strong style="color:var(--coral)">High Risk (&gt;60%)</strong><br><span style="color:var(--text-2)">High probability. Urgent endocrinologist consultation advised.</span></div>
+      </div>
+    </div>
+  </aside>
+</div></div>
+{% endblock %}
