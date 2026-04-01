@@ -270,3 +270,15 @@ plt.tight_layout()
 save_fig("cv_scores.png")
 
 
+# ── 6. Summary ───────────────────────────────────────────────────────────────
+print("\n[6/6] Training Summary")
+print("=" * 60)
+print(f"  Accuracy  : {acc:.4f}  ({acc*100:.2f}%)")
+print(f"  ROC-AUC   : {roc_auc:.4f}")
+print(f"  PR-AUC    : {pr_auc:.4f}")
+print(f"  CV Mean   : {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
+print("=" * 60)
+print("\n  Classification Report:")
+print(classification_report(y_test, y_pred, target_names=["No Diabetes","Diabetes"]))
+print("\n✅ Training complete! All files saved.")
+print("   Run: python app.py  to start the web server.")
