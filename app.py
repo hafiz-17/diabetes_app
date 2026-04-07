@@ -1,5 +1,3 @@
-"""DiabetesAI Flask Application v4 – separate predict / result pages + session"""
-
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import joblib, os, io, datetime, json
 import numpy as np
