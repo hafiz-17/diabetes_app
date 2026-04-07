@@ -82,8 +82,3 @@ http://localhost:5000
 - **Personalised Health Advice** – Based on risk level and input values
 
 ---
-
-## 🔒 Disclaimer
-
-This tool is for **educational and informational purposes only**.  
-It does not constitute medical advice. Always consult a qualified physician.
