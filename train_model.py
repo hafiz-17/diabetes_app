@@ -53,7 +53,6 @@ print("=" * 60)
 print("  DIABETES PREDICTION MODEL TRAINING")
 print("=" * 60)
 
-# ── 1. Load & pre-process ────────────────────────────────────────────────────
 print("\n[1/6] Loading dataset …")
 df = pd.read_csv(DATA_PATH)
 print(f"  Rows: {len(df):,}  |  Columns: {df.shape[1]}")
