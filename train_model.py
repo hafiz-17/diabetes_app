@@ -1,8 +1,3 @@
-"""
-Diabetes Prediction Model Training Script
-Generates trained model + performance graphs
-"""
-
 import pandas as pd
 import numpy as np
 import matplotlib
